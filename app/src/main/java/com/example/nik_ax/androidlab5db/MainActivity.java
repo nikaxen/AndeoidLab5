@@ -10,22 +10,19 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 
-public class MainActivity extends AppCompatActivity implements OnClickListener {
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
-    final String LOG_TAG = "myLogs";
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+
+    final String LOG_TAG = "Logs";
     Button btnAdd, btnRead, btnClear;
     EditText etName, etEmail;
     DBHelper dbHelper;
-
-    public void gotoAct2(View view){
-        Intent intent = new Intent(this, ActivityOut.class);
-        startActivity(intent);
-    }
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,60 +60,63 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
                 cv.put("name", name);
                 cv.put("email", email);
 
-                long rowID = db.insert("mytable1", null, cv);
+                long rowID = db.insert("mytable", null, cv);
                 Log.d(LOG_TAG, "row inserted, ID = " + rowID);
+                etName.setText(null);
+                etEmail.setText(null);
                 break;
             case R.id.btnRead:
                 Log.d(LOG_TAG, "--- Rows in mytable ---");
-
-                Cursor c = db.query("mytable1", null, null, null, null, null, null);
+                Intent intent = new Intent(this, ViewActivity.class);
+                Cursor c = db.query("mytable", null, null, null, null, null, null);
+                List<MyTable> myTableList = new ArrayList<>();
+                MyTable myTable;
 
                 if (c.moveToFirst()) {
-                    int idColIndex = c.getColumnIndex("id");
+                    int idColIndex = c.getColumnIndex("_id");
                     int nameColIndex = c.getColumnIndex("name");
                     int emailColIndex = c.getColumnIndex("email");
 
                     do {
-                        Log.d(LOG_TAG, "ID = " + c.getInt(idColIndex) +
-                                ", name = " + c.getString(nameColIndex) +
-                                ", email = " + c.getString(emailColIndex));
+                        myTable = new MyTable(c.getInt(idColIndex), c.getString(nameColIndex), c.getString(emailColIndex));
+                        myTableList.add(myTable);
+                        Log.d(LOG_TAG, "ID = " + myTable.getId() +
+                                ", name = " + myTable.getName() +
+                                ", email = " + myTable.getEmail());
                     } while (c.moveToNext());
                 } else
                     Log.d(LOG_TAG, "0 rows");
                 c.close();
+
+                intent.putExtra("mtl", (Serializable) myTableList);
+                startActivity(intent);
                 break;
             case R.id.btnClear:
                 Log.d(LOG_TAG, "--- Clear mytable ---");
-                int clearCount = db.delete("mytable1", null, null);
+                int clearCount = db.delete("mytable", null, null);
                 Log.d(LOG_TAG, "deleted rows count = " + clearCount);
-                break;
-            case R.id.btnRedirect:
-                Intent intent = new Intent(this, ActivityOut.class);
-                startActivity(intent);
                 break;
         }
         dbHelper.close();
     }
-    static class DBHelper extends SQLiteOpenHelper {
-        private String LOG_TAG;
 
-        public DBHelper(Context context) {
+
+    static class DBHelper extends SQLiteOpenHelper {
+        private String LOG_TAG = "Logs";
+
+        DBHelper(Context context) {
             super(context, "myDB", null, 1);
         }
 
         @Override
-        public void onCreate(SQLiteDatabase db){
+        public void onCreate(SQLiteDatabase db) {
             Log.d(LOG_TAG, "--- OnCreate database ---");
-            db.execSQL("create table mytable1 (_id integer primary key autoincrement,"
-            + "name text,"
-            + "email text" + ");");
+            db.execSQL(String.format("create table mytable (_id integer primary key autoincrement,name text,email text);"));
         }
 
         @Override
-        public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion){
+        public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 
         }
     }
 }
-
-

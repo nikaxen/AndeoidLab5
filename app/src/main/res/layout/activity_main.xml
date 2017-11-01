@@ -69,17 +69,6 @@
         android:layout_marginBottom="30dp">
 
         <Button
-            android:id="@+id/btnRedirect"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignBaseline="@+id/btnAdd"
-            android:layout_alignBottom="@+id/btnAdd"
-            android:layout_alignParentStart="true"
-            android:layout_marginStart="51dp"
-            android:onClick="gotoAct2"
-            android:text="Values" />
-
-        <Button
             android:id="@+id/btnAdd"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
